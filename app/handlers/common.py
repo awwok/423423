@@ -15,7 +15,7 @@ router = Router()
 async def start(message: Message, state: FSMContext):
     await state.clear()
     async with SessionLocal() as session:
-        await get_or_create_user(session, message.from_user.id, settings.default_timezone)
+        await get_or_create_user(session, message.from_user.id, settings.default_timezone, display_name=message.from_user.full_name)
     await message.answer("Добро пожаловать! Выберите раздел:", reply_markup=main_menu())
 
 @router.message(lambda message: message.text == "Финансы")

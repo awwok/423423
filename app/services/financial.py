@@ -20,11 +20,14 @@ def parse_money(value: str) -> Decimal:
         raise ValueError("Сумма должна быть больше нуля.")
     return amount
 
-async def get_or_create_user(session: AsyncSession, telegram_id: int, timezone: str) -> User:
+async def get_or_create_user(session: AsyncSession, telegram_id: int, timezone: str, display_name: str | None = None) -> User:
     user = await session.scalar(select(User).where(User.telegram_id == telegram_id))
     if user:
+        if display_name and user.display_name != display_name:
+            user.display_name = display_name
+            await session.commit()
         return user
-    user = User(telegram_id=telegram_id, timezone=timezone)
+    user = User(telegram_id=telegram_id, timezone=timezone, display_name=display_name)
     session.add(user)
     await session.flush()
     for name in ("Наличные", "Карта", "Накопления"):

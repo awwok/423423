@@ -19,8 +19,15 @@ def cancel_menu() -> InlineKeyboardMarkup:
 def simulator_menu(has_bank: bool) -> InlineKeyboardMarkup:
     rows = []
     if has_bank:
-        rows = [[InlineKeyboardButton(text="🏦 Обзор банка", callback_data="sim:dashboard")], [InlineKeyboardButton(text="Выдать кредит", callback_data="sim:loan"), InlineKeyboardButton(text="Вклад", callback_data="sim:deposit")], [InlineKeyboardButton(text="Закрыть период", callback_data="sim:period")]]
+        rows = [
+            [InlineKeyboardButton(text="🏦 Обзор банка", callback_data="sim:dashboard"), InlineKeyboardButton(text="👤 Владелец", callback_data="sim:owner")],
+            [InlineKeyboardButton(text="📨 Кредитные заявки", callback_data="sim:applications"), InlineKeyboardButton(text="👥 Клиенты", callback_data="sim:clients")],
+            [InlineKeyboardButton(text="Вклад", callback_data="sim:deposit"), InlineKeyboardButton(text="📜 Правила", callback_data="sim:rules")],
+            [InlineKeyboardButton(text="👨‍💼 Персонал", callback_data="sim:staff"), InlineKeyboardButton(text="🧩 Развитие", callback_data="sim:upgrades")],
+            [InlineKeyboardButton(text="📈 Аналитика", callback_data="sim:analytics"), InlineKeyboardButton(text="🏆 Достижения", callback_data="sim:achievements")],
+            [InlineKeyboardButton(text="Закрыть период", callback_data="sim:period")],
+        ]
     else:
-        rows = [[InlineKeyboardButton(text="Создать банк", callback_data="sim:create")]]
+        rows = [[InlineKeyboardButton(text="Создать банк", callback_data="sim:create")], [InlineKeyboardButton(text="📜 Правила игры", callback_data="sim:rules")]]
     rows.append([InlineKeyboardButton(text="Главное меню", callback_data="main")])
     return InlineKeyboardMarkup(inline_keyboard=rows)

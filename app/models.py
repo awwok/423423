@@ -12,6 +12,9 @@ class User(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     timezone: Mapped[str] = mapped_column(String(64), default="Europe/Samara")
+    display_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     accounts: Mapped[list["Account"]] = relationship(cascade="all, delete-orphan")
     categories: Mapped[list["Category"]] = relationship(cascade="all, delete-orphan")
     bank: Mapped["Bank | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -95,14 +98,48 @@ class Bank(TimestampMixin, Base):
     loans: Mapped[list["Loan"]] = relationship(cascade="all, delete-orphan")
     deposits_rows: Mapped[list["Deposit"]] = relationship(cascade="all, delete-orphan")
 
+class Borrower(Base):
+    __tablename__ = "borrowers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bank_id: Mapped[int] = mapped_column(ForeignKey("banks.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    age: Mapped[int] = mapped_column(Integer)
+    profession: Mapped[str] = mapped_column(String(120))
+    monthly_income: Mapped[Decimal] = mapped_column(MONEY)
+    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    credit_score: Mapped[int] = mapped_column(Integer, default=600)
+    history: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CreditApplication(Base):
+    __tablename__ = "credit_applications"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bank_id: Mapped[int] = mapped_column(ForeignKey("banks.id", ondelete="CASCADE"), index=True)
+    borrower_id: Mapped[int] = mapped_column(ForeignKey("borrowers.id", ondelete="CASCADE"), index=True)
+    requested_amount: Mapped[Decimal] = mapped_column(MONEY)
+    annual_rate_offer: Mapped[Decimal] = mapped_column(Numeric(7, 4))
+    term_periods: Mapped[int] = mapped_column(Integer, default=12)
+    risk_score: Mapped[Decimal] = mapped_column(Numeric(5, 4), default=Decimal("0.20"))
+    credit_score: Mapped[int] = mapped_column(Integer, default=600)
+    credit_history: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
+    decision: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
 class Loan(Base):
     __tablename__ = "loans"
     id: Mapped[int] = mapped_column(primary_key=True)
     bank_id: Mapped[int] = mapped_column(ForeignKey("banks.id", ondelete="CASCADE"), index=True)
+    application_id: Mapped[int | None] = mapped_column(ForeignKey("credit_applications.id", ondelete="SET NULL"), nullable=True, index=True)
+    borrower_id: Mapped[int | None] = mapped_column(ForeignKey("borrowers.id", ondelete="SET NULL"), nullable=True, index=True)
     principal: Mapped[Decimal] = mapped_column(MONEY)
     annual_rate: Mapped[Decimal] = mapped_column(Numeric(7, 4))
     risk: Mapped[Decimal] = mapped_column(Numeric(5, 4))
     remaining: Mapped[Decimal] = mapped_column(MONEY)
+    term_periods: Mapped[int] = mapped_column(Integer, default=12)
+    payments_made: Mapped[int] = mapped_column(Integer, default=0)
     missed_periods: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(16), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
